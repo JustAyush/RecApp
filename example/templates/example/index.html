@@ -63,29 +63,30 @@
             <h4 style="padding:1.5em;">As you've last checked in {{ last_check_in_book }}</h4>
             <div id="lastCheckedIn" class="carousel slide" data-ride="carousel">
                 <div class="carousel-inner row w-100 mx-auto" role="listbox">
-                    {% for books in rec_books  %}
+                    {% for s_books in similar_books  %}
 
                     {% if forloop.first %}
                     <div class="carousel-item col-12 col-sm-6 col-md-4 col-lg-3 active">
                         <div class="card" style="width: 15rem;">
-                            <img class="card-img-top" src="{{books.imageURL}}" alt="Card image cap"
+                            <img class="card-img-top" src="{{s_books.imageURL}}" alt="Card image cap"
                                 style="width:200; height:300;">
                             <div class="card-body">
-                                <h5 class="card-title">{{books.bookTitle}}</h5>
-                                <p class="card-text">By {{books.bookAuthor}} </p>
-                                <a href="{% url 'detail' books.ISBN %}"> More </a>
+                                <h5 class="card-title">{{s_books.bookTitle}}</h5>
+                                <p class="card-text">By {{s_books.bookAuthor}} </p>
+                                <a href="{% url 'detail' s_books.ISBN %}"> More </a>
                             </div>
                         </div>
                     </div>
                     {% else %}
                     <div class="carousel-item col-12 col-sm-6 col-md-4 col-lg-3">
                         <div class="card" style="width: 15rem;">
-                            <img class="card-img-top" src="{{books.imageURL}}" alt="Card image cap"
+                            <img class="card-img-top" src="{{s_books.imageURL}}" alt="Card image cap"
                                 style="width:200; height:300;">
                             <div class="card-body">
-                                <h5 class="card-title">{{books.bookTitle}}</h5>
-                                <p class="card-text">By {{books.bookAuthor}}</p>
-                                <a href="{% url 'detail' books.ISBN %}"> More </a>
+                                <h5 class="card-title">{{s_books.bookTitle}}</h5>
+                                <p class="card-text">By {{s_books.bookAuthor}}</p>
+                                <p> {{s_books.ISBN}}</p>
+                                <a href="{% url 'detail' s_books.ISBN %}"> More </a>
                             </div>
                         </div>
                     </div>
@@ -257,7 +258,7 @@
                     <hr />
 
                     <form enctype="multipart/form-data" action="{% url 'index' %}add_book" method="POST" class="form">
-                        >>>>>>> a90684cd110a199edc502d1254028627e6529014
+
                         {% csrf_token %}
 
                         <div class="form-group">
