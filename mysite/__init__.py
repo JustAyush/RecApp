@@ -15,6 +15,13 @@ from lightfm.evaluation import auc_score
 import pickle
 import re
 import pymongo
+from random import shuffle
+
+import gensim
+import os
+import random
+
+from sklearn import preprocessing
 
 
 import json
@@ -23,6 +30,12 @@ import time
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import datetime
+
+
+import torch
+import pickle
+import torchtext
+import spacy
 
 
 REFRESH_INTERVAL = 60 #seconds
@@ -95,12 +108,35 @@ def similar_recommendation(model, interaction_matrix, user_id, user_dikt,
         y=list(w)
         heading = "Recommended books"
 
-    else:
-        print("--------------------------random-----------------------------------")
-        w=mycol.aggregate([{"$match":{"average_rating":{"$gt":4}}},{"$sample":{"size":15}},
-                          {"$project":{'_id':0,'ISBN':'$ISBN','bookTitle':'$Book-Title','bookAuthor':'$Book-Author','genres':'$genres','imageURL':'$Image-URL','averageRating':'$average_rating','publicationYear':'$publication_year','description':'$description'} }])
-        y=list(w)
-        heading = "Random books"
+    else:  
+        
+        lastCheckedIn = mydb['userActivity'].aggregate([{"$match":{"user_id": user_id}},{"$project":{"activity":{"book_id":1,"activity":{"date_modified":1}}}},{"$unwind":"$activity"},{"$project":{"activity.book_id":1,"date_modified":"$activity.activity.date_modified"}},{"$sort":{"date_modified":-1}}])
+        last_check_in = list(lastCheckedIn)
+
+        if(len(last_check_in)!=0):
+            s_books = []
+            print("last",last_check_in)
+            for i in range(len(last_check_in)):
+                last_check_in_book_id = last_check_in[i]['activity']['book_id']
+                similar_books = getSimilarBooks(user_id, last_check_in_book_id)
+                print(similar_books)
+                s_books=s_books+similar_books
+
+            s_books=list(set(s_books))
+
+            s_books=random.sample(s_books,15 )
+            
+            x=mydb['bookDataset'].aggregate([{"$match":{"ISBN":{"$in":s_books}}},{"$project":{'_id':0, 'ISBN':'$ISBN', 'genres': '$genres', 'bookTitle': '$Book-Title', 'bookAuthor': '$Book-Author', 'publicationYear': '$Year-Of-Publication', 'publisher': '$Publisher', 'imageURL': '$Image-URL', 'averageRating': '$average_rating', 'description': '$description', 'publicationYear':'$publication_year'} }])
+            y = list(x)
+            heading = "Recommended (CBF)"
+            print("similar book (CBF)-------------------------------",y)
+
+        else:
+            print("--------------------------random-----------------------------------")
+            w=mycol.aggregate([{"$match":{"average_rating":{"$gt":4}}},{"$sample":{"size":15}},
+                            {"$project":{'_id':0,'ISBN':'$ISBN','bookTitle':'$Book-Title','bookAuthor':'$Book-Author','genres':'$genres','imageURL':'$Image-URL','averageRating':'$average_rating','publicationYear':'$publication_year','description':'$description'} }])
+            y = list(w)
+            heading = "Random books"
 
     return y, heading
 
@@ -127,14 +163,53 @@ def similar_recommendation(model, interaction_matrix, user_id, user_dikt,
 
 
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+import torch.nn as nn
 
+model= torch.load("sentiment_model.pt",map_location='cpu')
 
+with open('t_vocab.pickle', 'rb') as handle:
+    text_vocab = pickle.load(handle)
+
+import spacy
+nlp = spacy.load('en')
+
+def predict_sentiment(model, sentence):
+    print("function call")
+    tokenized = [tok.text for tok in nlp.tokenizer(sentence)]
+    print("type 1 is",type(tokenized))
+    indexed = [text_vocab[t] for t in tokenized]
+    print("type 2 is",type(indexed))
+    length = [len(indexed)]
+    tensor = torch.LongTensor(indexed).to(device)
+    tensor = tensor.unsqueeze(1)
+    length_tensor = torch.LongTensor(length)
+    prediction = torch.sigmoid(model(tensor, length_tensor))
+    return prediction.item()
 
 def get_clicks_rating(n):
     return 5*(1-0.5**n)
 
 def get_review_rating(in_text):
-    return 3
+    print('Review here ----------------------------------------------', in_text)
+    print('in_text type', type(in_text))
+    OldValue = predict_sentiment(model, str(in_text))
+    print('OldValue', OldValue)
+    # OldValue=0.8
+    OldMax = 1
+    OldMin = 0
+
+    NewMax = 5
+    NewMin = 1
+    
+    OldRange = (OldMax - OldMin)  
+    NewRange = (NewMax - NewMin)  
+    NewValue = (((OldValue - OldMin) * NewRange) / OldRange) + NewMin
+    NewValue = round(NewValue)
+    print(NewValue)
+    
+    return NewValue
+
 
 def get_net_rating(review_rating,rating,clicks_rating):
     review_rating = float(review_rating)
@@ -224,10 +299,10 @@ def talkShow():
 
 
     # obtain activity of user (isFifteen= 0 and rating>15) on book
-    x=mydb['userActivity'].aggregate([{"$match":{"isFifteen":0}},{"$addFields":{"size":{"$size":"$activity"}}},{"$match":{"size":{"$gt":5}}},{"$project":{"user_id":1,"_id":0,"activity":{"book_id":1,"activity":{"net_rating":1}}}},{"$unwind":"$activity"},{"$project":{"user_id":1,"activity":"$activity.book_id","rating":"$activity.activity.net_rating"}}]);
+    x=mydb['userActivity'].aggregate([{"$match":{"isFifteen":0}},{"$addFields":{"size":{"$size":"$activity"}}},{"$match":{"size":{"$gt":15}}},{"$project":{"user_id":1,"_id":0,"activity":{"book_id":1,"activity":{"net_rating":1}}}},{"$unwind":"$activity"},{"$project":{"user_id":1,"activity":"$activity.book_id","rating":"$activity.activity.net_rating"}}]);
     interaction_data=list(x)
     # obtain the list of new user to update (isFifteen =0 and rating>15)
-    y=mydb['userActivity'].aggregate([{"$match":{"isFifteen":0}},{"$addFields":{"size":{"$size":"$activity"}}},{"$match":{"size":{"$gt":5}}},{"$project":{"user_id":1,"_id":0}}]);
+    y=mydb['userActivity'].aggregate([{"$match":{"isFifteen":0}},{"$addFields":{"size":{"$size":"$activity"}}},{"$match":{"size":{"$gt":15}}},{"$project":{"user_id":1,"_id":0}}]);
     userlist=list(y)
 
     # add both users
@@ -278,6 +353,41 @@ def talkShow():
         pickle.dump(user_dikt, handle, protocol=pickle.HIGHEST_PROTOCOL)
         print("user dictionary is saved here")
 
-# talkShow()
-# scheduler.add_job(talkShow, 'interval', seconds = REFRESH_INTERVAL)
+talkShow()
+scheduler.add_job(talkShow, 'interval', seconds = REFRESH_INTERVAL)
 
+
+
+# for CBF (doc2vec)
+
+with open('model_doc2vec.pickle','rb') as handle:
+    model_doc2vec = pickle.load(handle)
+with open('train_corpus.pickle','rb') as handle:
+    train_corpus=pickle.load(handle)
+with open('label_encoder.pickle','rb') as handle:
+    le=pickle.load(handle)
+
+
+def getSimilarBooks(userId, book_id):
+    
+    print(book_id)
+    books=mydb['bookDataset'].find({"ISBN":book_id})
+    book=list(books)
+
+    try:
+        doc_id=list(le.transform([book_id]))[0]
+        # le.inverse_transform([88])
+
+        sims = model_doc2vec.docvecs.most_similar([model_doc2vec.infer_vector(train_corpus[doc_id].words)], topn=len(model_doc2vec.docvecs))
+        
+    except:    
+        # document=gensim.models.doc2vec.TaggedDocument(gensim.utils.simple_preprocess(line),[i])
+        document=gensim.utils.simple_preprocess(book[0]['description'])
+        sims = model_doc2vec.docvecs.most_similar([model_doc2vec.infer_vector(document)], topn=len(model_doc2vec.docvecs))
+       
+    book_array=[]
+    for i in range (15):
+        book_array.append(str(list(le.inverse_transform([sims[i][0]]))[0]))
+    # x=mydb['bookDataset'].find({"ISBN":{"$in":book_array}})
+    # x = list(x)
+    return book_array
