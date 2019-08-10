@@ -242,13 +242,14 @@
                     <div>
 
                     </div>
-                    <form action="getData" class="form" id="getForm" method="POST">
+                    <!-- <form action="getData" class="form" id="getForm" method="POST">
                         {% csrf_token %}
                         <input type="submit" value="Get Data" class="btn btn-primary" name="getData" disabled>
                     </form>
-                    <hr />
+                    <hr /> -->
 
-                    <form enctype="multipart/form-data" action="{% url 'index' %}" method="POST" class="form">
+                    <form enctype="multipart/form-data" action="{% url 'getData' %}" method="POST" class="form">
+                        {% csrf_token %}
                         <input type="submit" value="Get Data" class="btn btn-primary" name="getData">
                         <div style="float: right;color:blue;">
                             <span id='request_message'>
