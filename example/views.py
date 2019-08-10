@@ -14,9 +14,13 @@ import time
 import datetime
 
 
+
+
 import ast
 
 from mysite import get_recommendation, get_clicks_rating, get_review_rating, get_net_rating, myclient, mydb, mycol
+
+from mysite import getSimilarBooks
 
 from users.models import Profile
 
@@ -94,11 +98,21 @@ def index(request):
         # for 'as you've last checked in' section
         lastCheckedIn = mydb['userActivity'].aggregate([{"$match":{"user_id": userId}},{"$project":{"activity":{"book_id":1,"activity":{"date_modified":1}}}},{"$unwind":"$activity"},{"$project":{"activity.book_id":1,"date_modified":"$activity.activity.date_modified"}},{"$sort":{"date_modified":-1}},{"$limit" : 1} ])
         last_check_in = list(lastCheckedIn)
-        last_check_in_book_id = last_check_in[0]['activity']['book_id']
-        for_last_checked_books=mycol.find({"ISBN":last_check_in_book_id})
-        for_last_checked_books=list(for_last_checked_books)
-        last_check_in_book = for_last_checked_books[0]['Book-Title']
-        print('Last Checked In----------------------------', last_check_in_book)
+        if(len(last_check_in)!=0):
+            last_check_in_book_id = last_check_in[0]['activity']['book_id']
+            for_last_checked_books=mycol.find({"ISBN":last_check_in_book_id})
+            for_last_checked_books=list(for_last_checked_books)
+            last_check_in_book = for_last_checked_books[0]['Book-Title']
+            print('Last Checked In----------------------------', last_check_in_book)
+            similar_books = getSimilarBooks(userId, last_check_in_book_id)
+            # print(similar_books)
+            x=mydb['bookDataset'].aggregate([{"$match":{"ISBN":{"$in":similar_books}}},{"$project":{'_id':0, 'ISBN':'$ISBN', 'genres': '$genres', 'bookTitle': '$Book-Title', 'bookAuthor': '$Book-Author', 'publicationYear': '$Year-Of-Publication', 'publisher': '$Publisher', 'imageURL': '$Image-URL', 'averageRating': '$average_rating', 'description': '$description', 'publicationYear':'$publication_year'} }])
+            similar_books=list(x)
+            print(similar_books)
+        else:
+            last_check_in_book = " "
+            similar_books = []
+
 
 
     else:
@@ -228,6 +242,7 @@ def index(request):
             'heading': heading,
             'top_rated': top_rated_books, 
             'last_check_in_book': last_check_in_book,
+            'similar_books': similar_books,
             'recently_added': recently_added,
             'shopkeeper': shopkeeper, 
             'getData' : {
