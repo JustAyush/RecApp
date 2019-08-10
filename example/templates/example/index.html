@@ -189,29 +189,26 @@
             </button>
             </div>
             <div class="modal-body">
-
                 <div>
-
                 </div>
                 <form action="getData" class="form" id="getForm" method="POST">
                     {% csrf_token %}
-                    <input type="submit" value="Get Data" class="btn btn-primary" name ="getData" >
+                    <input type="submit" id="submit_button" value="Get Data" class="btn btn-primary" name ="getData" >
                     <div  style="float: right;color:blue;">
                         <span id='request_message'>
                             
                         </span> </div>
                 </form>
                <hr/>
-                
-                <form enctype="multipart/form-data" action="{% url 'index' %}add_book" method="POST" class="form" >
+                <form id="form_submit_button" enctype="multipart/form-data" action="{% url 'index' %}add_book" method="POST" class="form" >
                     {% csrf_token %}
-                    
-                    <div class="form-group">
-                        <img  id="book_image_src" alt="bookSelect" width="110" height="150"> 
+                    <!-- <div class="form-group">
                         {{ form}}
-                    </div>
+                    </div> -->
 
                     <div class="form-group">
+                        <img  id="book_image_src" alt="bookSelect" width="110" height="150">
+                        <input id="id_book_cover" type="file" name="book_cover" required> 
                         <label for="exampleFormControlInput1">Book Name</label>
                         <input type="text" class="form-control" name="Book-Title" id="bookTitle"
                             placeholder="" required>
@@ -242,8 +239,8 @@
                         <label for="exampleFormControlTextarea1">Description</label>
                         <textarea class="form-control" name="description" id="description" rows="3" required></textarea>
                     </div>
-
-                    <button type="submit" class="btn btn-primary" name="submitData">Save changes</button>
+                    <input type="hidden" id="url_id" name="url_name" value=""> 
+                    <button type="submit"  class="btn btn-primary" name="submitData">Save changes</button>
                 </form>
                 
         </div>

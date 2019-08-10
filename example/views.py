@@ -523,25 +523,29 @@ def getData(request):
 
 
 def add_book(request):
-    # a=request.POST
+    print("the post is",request.POST)
     print('hello world')
     # return HttpResponse(request.POST)
-    form = BookCoverForm(request.POST, request.FILES) 
-    myfile = request.FILES['book_cover']
-    fs = FileSystemStorage()
-    filename = fs.save(myfile.name, myfile)
-    uploaded_file_url = fs.url(filename)
+    # form = BookCoverForm(request.POST, request.FILES) 
+    try:
+        myfile = request.FILES['book_cover']
+        fs = FileSystemStorage()
+        filename = fs.save(myfile.name, myfile)
+        uploaded_file_url = fs.url(filename)
+        print('the url is',uploaded_file_url )
+    except:
+        uploaded_file_url=request.POST.get('url_name')
     bookTitle = request.POST.get('Book-Title')
     author = request.POST.get('Book-Author')
     isbn = request.POST.get('ISBN')
     genre = request.POST.get('genre')
     description = request.POST.get('description') 
     print(bookTitle, author, isbn, genre, description)
-    print(uploaded_file_url)
+    # print(uploaded_file_url)
     
     # myclient = pymongo.MongoClient("mongodb://localhost:27017/")
     # mydb = myclient["majorProject"]
-    # date_now=datetime.datetime.now()
+    date_now=datetime.datetime.now()
     # mycol = mydb["bookDataset"]
     # x=mydb['counter'].find({},{"book_count":1,"_id":0})
     # new_book_id=list(x)[0]['book_count']+1
@@ -551,38 +555,43 @@ def add_book(request):
         'Image-URL': uploaded_file_url,
         'description': description,
         'genres': genre,
-        'date_added':date_now
+        'date_added':date_now,
+        'ISBN':isbn,
+        'isbn13':int(isbn)
     }
+    print("the great a is ",a)
     isRegister=True
     try:
-        z=mycol.update({'ISBN':isbn},a)
+        z=mydb['bookDataset'].update({'ISBN':isbn},a,upsert=True)
         mydb['counter'].update({},{"$inc":{"book_count":1}})
+        print('hello the book is added')
     except:
         isRegister=False
     print(isRegister)
-    print(new_book_id)
+    # print(new_book_id)
 
-    if form.is_valid():
-        form.save() 
-        return redirect('index') 
-    else: 
-        form = BookCoverForm() 
-    return render(request, 'example/index.html', {
-        'form': form,
-        'rec_books': rec_books,
-        'recently_added': recently_added,
-        'heading': heading,
-        'top_rated': top_rated_books,
-        'shopkeeper': shopkeeper,  
-        'getData' : {
-                'bookTitle': bookTitle,
-                'bookAuthor': bookAuthor,
-                'genre': genre,
-                'description': description,
-                'ISBN': ISBN,
-                'imageURL': imageURL 
-            }
-    }) 
+    # if form.is_valid():
+    #     form.save() 
+    #     return redirect('index') 
+    # else: 
+    #     form = BookCoverForm() 
+    # return render(request, 'example/index.html', {
+    #     'form': form,
+    #     'rec_books': rec_books,
+    #     'recently_added': recently_added,
+    #     'heading': heading,
+    #     'top_rated': top_rated_books,
+    #     'shopkeeper': shopkeeper,  
+    #     'getData' : {
+    #             'bookTitle': bookTitle,
+    #             'bookAuthor': bookAuthor,
+    #             'genre': genre,
+    #             'description': description,
+    #             'ISBN': ISBN,
+    #             'imageURL': imageURL 
+    #         }
+    # }) 
+    return HttpResponse('you have no authority to access this site')
 
 def search(request):
 
