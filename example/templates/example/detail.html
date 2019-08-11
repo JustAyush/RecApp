@@ -1,0 +1,237 @@
+{% extends "example/base.html" %}
+
+{% load static %}
+
+{% load custom_templates %}
+
+{% block body %}
+
+<div class="container">
+
+    <div class="row" style="position:relative; width:70%; margin-top:4rem; left:15% ">
+
+        <div class="col-sm-4">
+            <img class="card-img-top" src="{{b.imageURL}}" alt="Card image cap" style="width:200; height:300;">
+            <!-- <button class="btn btn-primary" style="margin:1.5em;"  
+                > I've READ IT
+                </button> -->
+        </div>
+
+        <div class="col-sm-8">
+            <h1> {{b.bookTitle}} </h1>
+            <h5> by {{b.bookAuthor}}</h5>
+            <p> ISBN: {{b.ISBN}} Published in {{b.publicationYear}} <br /> Genre: {{b.genres|lowerCase}}</p>
+            <div class="rating">
+                <div class="stars-outer">
+                    <div class="stars-inner"></div>
+                </div>
+                <!-- {{b.averageRating}} -->
+            </div>
+            <hr />
+            {{b.description}}
+        </div>
+
+    </div>
+
+    <br /> <br />
+    <hr />
+
+    <div class="container">
+        <h2> Books similar to this book </h2>
+
+        <div class="top-content">
+            <div class="container" style="width:80%;">
+                <div id="carousel-example" class="carousel slide" data-ride="carousel">
+                    <div class="carousel-inner row " role="listbox">
+                        {% for books in e %}
+                        {% if forloop.first %}
+                        <div class="carousel-item col-12 col-sm-6 col-md-4 col-lg-3 active">
+                            <div class="card" style="width: 10rem;">
+                                <img class="card-img-top" src="{{books.imageURL}}" alt="Card image cap"
+                                    style="width:120px; height:180px; align-self: center">
+                                <div class="card-body">
+                                    <p style="font-size:10px;" class="card-title">{{books.bookTitle}}</p>
+                                    <p style="font-size:10px;" class="card-text">By {{books.bookAuthor}} </p>
+                                    <a style="font-size:10px;" href="{% url 'detail' books.ISBN %} "> More </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="carousel-item col-12 col-sm-6 col-md-4 col-lg-3">
+                            <div class="card" style="width: 10rem;">
+                                <img class="card-img-top" src="{{books.imageURL}}" alt="Card image cap"
+                                    style="width:120px; height:180px; align-self: center">
+                                <div class="card-body">
+                                    <p style="font-size:10px;" class="card-title">{{books.bookTitle}}</p>
+                                    <p style="font-size:10px;" class="card-text">By {{books.bookAuthor}}</p>
+                                    <a style="font-size:10px;" href="{% url 'detail' books.ISBN %} "> More </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% endfor %}
+
+                    </div>
+                    <a class="carousel-control-prev" href="#carousel-example" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#carousel-example" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+    <br>
+    <hr />
+
+    <div class="ratingView">
+        <div id="changeOnRating">
+            {% if sendRating == 0 %}
+            <h5>Give this book a rating </h5>
+            {% else %}
+            <h5> You rated this book </h5>
+            {% endif %}
+            <div class="container">
+                {% if sendRating == 0 %}
+                <form class="r" action="{% url 'detail' b.ISBN %}" method="POST" id="ratingForm">
+                    {% csrf_token %}
+                    <label>
+                        <input type="radio" name="stars" value="1" onclick="this.form.submit()" />
+                        <span class="icon">★</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="stars" value="2" onclick="this.form.submit()" />
+                        <span class="icon">★</span>
+                        <span class="icon">★</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="stars" value="3" onclick="this.form.submit()" />
+                        <span class="icon">★</span>
+                        <span class="icon">★</span>
+                        <span class="icon">★</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="stars" value="4" onclick="this.form.submit()" />
+                        <span class="icon">★</span>
+                        <span class="icon">★</span>
+                        <span class="icon">★</span>
+                        <span class="icon">★</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="stars" value="5" onclick="this.form.submit()" />
+                        <span class="icon">★</span>
+                        <span class="icon">★</span>
+                        <span class="icon">★</span>
+                        <span class="icon">★</span>
+                        <span class="icon">★</span>
+                    </label>
+                </form>
+                {% else %}
+                <div class="rating1">
+                    <div class="stars-outer1">
+                        <div class="stars-inner1"></div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <br>
+    <hr />
+
+    <div class="reviewSection">
+        <div id="changeOnReview">
+            <h5> Add a review </h5>
+            <form action="{% url 'detail' b.ISBN %}" method="POST" class="form" id="reviewForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea name='review' value="review" class="form-control" id="reviewTextArea"
+                        rows="3">{{ sendReview }} </textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Post</button>
+            </form>
+        </div>
+    </div>
+
+
+
+</div>
+
+<meta id="my-data" data-name="{{b.averageRating}}">
+
+<meta id="my-data1" data-name="{{ sendRating }}">
+
+<script>
+    let isbn = '{{b.ISBN}}';
+    let detail_url = "{% url 'detail' b.ISBN %}"
+    // $(document).ready(function() {
+    //     console.log(detail_url);
+    //     var xhr = new XMLHttpRequest();
+    //     xhr.open("POST", `http://localhost:8000${detail_url}`, true);
+    //     xhr.setRequestHeader('Content-Type', 'application/json');
+    //     xhr.send(JSON.stringify({
+    //         click: true
+    //     }));
+    // });
+</script>
+
+{% endblock %}
+
+
+{% block extrajs %}
+
+<!-- <script type="text/javascript">
+        console.log('{{b.ISBN}}');
+        // $(document).ready(function() {
+        // console.log(b.ISBN);
+        // // $.ajax({
+        // //   type: "POST",
+        // //   url: "{% url 'detail' b.ISBN %}",
+        // //   data: { "click" : "true" }
+        // //  });
+        // });
+    </script> -->
+
+
+<script src="detail.js"></script>
+<script src="main.js"></script>
+<script src="reviewForm.js"></script>
+<script src="ratingForm.js"></script>
+
+{% endblock %}
+
+
+{% block addBook %}
+{% if shopkeeper == 'yes' %}
+<li class="nav-item">
+    <a class="nav-link" href="#" data-toggle="modal" data-target="#exampleModal"> Add Book </a>
+</li>
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
