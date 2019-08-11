@@ -67,6 +67,7 @@ def index(request):
     description = ''
     ISBN = ''
     imageURL= ''
+    last_check_in_book = ''
 
     # db=client.test_db
     # dict={'A':[1,2,3,4,5,6]}
@@ -106,11 +107,11 @@ def index(request):
             for_last_checked_books=list(for_last_checked_books)
             last_check_in_book = for_last_checked_books[0]['Book-Title']
             # print('Last Checked In----------------------------', last_check_in_book)
-            similar_books = getSimilarBooks(userId, last_check_in_book_id)
+            similar_books = getSimilarBooks(last_check_in_book_id)
             x=mydb['bookDataset'].aggregate([{"$match":{"ISBN":{"$in":similar_books}}},{"$project":{'_id':0, 'ISBN':'$ISBN', 'genres': '$genres', 'bookTitle': '$Book-Title', 'bookAuthor': '$Book-Author', 'publicationYear': '$Year-Of-Publication', 'publisher': '$Publisher', 'imageURL': '$Image-URL', 'averageRating': '$average_rating', 'description': '$description', 'publicationYear':'$publication_year'} }])
             similar_books=list(x)
         else:
-            last_check_in_book = " "
+            last_check_in_book = ""
             similar_books = []
 
 
@@ -338,6 +339,11 @@ def detail(request, isbn):
                 whichList = 0
     
     
+    # similar_books_d = getSimilarBooks(isbn)
+    # x=mydb['bookDataset'].aggregate([{"$match":{"ISBN":{"$in":similar_books_d}}},{"$project":{'_id':0, 'ISBN':'$ISBN', 'genres': '$genres', 'bookTitle': '$Book-Title', 'bookAuthor': '$Book-Author', 'publicationYear': '$Year-Of-Publication', 'publisher': '$Publisher', 'imageURL': '$Image-URL', 'averageRating': '$average_rating', 'description': '$description', 'publicationYear':'$publication_year'} }])
+    # similar_books_d = list(x)
+    # print('similar book in detail page', similar_books_d)
+
 
     # if 'mainPage' in request.GET:
     #     for book in rec_books:

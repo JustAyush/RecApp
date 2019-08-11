@@ -90,6 +90,7 @@
     <br>
     <hr />
 
+    {% if user.is_authenticated %}
     <div class="ratingView">
         <div id="changeOnRating">
             {% if sendRating == 0 %}
@@ -159,7 +160,7 @@
         </div>
     </div>
 
-
+    {% endif %}
 
 </div>
 

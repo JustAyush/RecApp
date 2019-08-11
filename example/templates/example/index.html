@@ -58,7 +58,58 @@
         <br />
         <hr />
 
+        <div class="container">
+            <h4 style="padding:1.5em;">Top Rated</h4>
+            <div id="topRated" class="carousel slide" data-ride="carousel">
+                <div class="carousel-inner row w-100 mx-auto" role="listbox">
+                    {% for books in top_rated %}
+
+                    {% if forloop.first %}
+                    <div class="carousel-item col-12 col-sm-6 col-md-4 col-lg-3 active">
+                        <div class="card" style="width: 15rem;">
+                            <img class="card-img-top" src="{{books.imageURL}}" alt="Card image cap"
+                                style="width:200; height:300;">
+                            <div class="card-body">
+                                <h5 class="card-title">{{books.bookTitle}}</h5>
+                                <p class="card-text">By {{books.bookAuthor}} </p>
+                                <a href="{% url 'detail' books.ISBN %}"> More </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="carousel-item col-12 col-sm-6 col-md-4 col-lg-3">
+                        <div class="card" style="width: 15rem;">
+                            <img class="card-img-top" src="{{books.imageURL}}" alt="Card image cap"
+                                style="width:200; height:300;">
+                            <div class="card-body">
+                                <h5 class="card-title">{{books.bookTitle}}</h5>
+                                <p class="card-text">By {{books.bookAuthor}}</p>
+                                <a href="{% url 'detail' books.ISBN %}"> More </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+
+                    {% endfor %}
+
+                </div>
+                <a class="carousel-control-prev" href="#topRated" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#topRated" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </div>
+        </div>
+
+        <br />
+        <hr />
+
         {% if user.is_authenticated %}
+        {% if last_check_in_book != ""%}
         <div class="container">
             <h4 style="padding:1.5em;">As you've last checked in {{ last_check_in_book }}</h4>
             <div id="lastCheckedIn" class="carousel slide" data-ride="carousel">
@@ -109,56 +160,8 @@
         <br />
         <hr />
         {% endif %}
+        {% endif %}
 
-        <div class="container">
-            <h4 style="padding:1.5em;">Top Rated</h4>
-            <div id="topRated" class="carousel slide" data-ride="carousel">
-                <div class="carousel-inner row w-100 mx-auto" role="listbox">
-                    {% for books in top_rated %}
-
-                    {% if forloop.first %}
-                    <div class="carousel-item col-12 col-sm-6 col-md-4 col-lg-3 active">
-                        <div class="card" style="width: 15rem;">
-                            <img class="card-img-top" src="{{books.imageURL}}" alt="Card image cap"
-                                style="width:200; height:300;">
-                            <div class="card-body">
-                                <h5 class="card-title">{{books.bookTitle}}</h5>
-                                <p class="card-text">By {{books.bookAuthor}} </p>
-                                <a href="{% url 'detail' books.ISBN %}"> More </a>
-                            </div>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="carousel-item col-12 col-sm-6 col-md-4 col-lg-3">
-                        <div class="card" style="width: 15rem;">
-                            <img class="card-img-top" src="{{books.imageURL}}" alt="Card image cap"
-                                style="width:200; height:300;">
-                            <div class="card-body">
-                                <h5 class="card-title">{{books.bookTitle}}</h5>
-                                <p class="card-text">By {{books.bookAuthor}}</p>
-                                <a href="{% url 'detail' books.ISBN %}"> More </a>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-
-
-                    {% endfor %}
-
-                </div>
-                <a class="carousel-control-prev" href="#topRated" role="button" data-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Previous</span>
-                </a>
-                <a class="carousel-control-next" href="#topRated" role="button" data-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Next</span>
-                </a>
-            </div>
-        </div>
-
-        <br />
-        <hr />
 
         <div class="container">
             <h4 style="padding:1.5em;">Recently Added</h4>
@@ -230,78 +233,79 @@
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">Add Book</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-            </div>
-            <div class="modal-body">
-                <div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Add Book</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-                <form action="getData" class="form" id="getForm" method="POST">
-                    {% csrf_token %}
-                    <input type="submit" id="submit_button" value="Get Data" class="btn btn-primary" name ="getData" >
-                    <div  style="float: right;color:blue;">
-                        <span id='request_message'>
-                            
-                        </span> </div>
-                </form>
-               <hr/>
-                <form id="form_submit_button" enctype="multipart/form-data" action="{% url 'index' %}add_book" method="POST" class="form" >
-                    {% csrf_token %}
-                    <!-- <div class="form-group">
+                <div class="modal-body">
+                    <div>
+                    </div>
+                    <form action="getData" class="form" id="getForm" method="POST">
+                        {% csrf_token %}
+                        <input type="submit" id="submit_button" value="Get Data" class="btn btn-primary" name="getData">
+                        <div style="float: right;color:blue;">
+                            <span id='request_message'>
+
+                            </span> </div>
+                    </form>
+                    <hr />
+                    <form id="form_submit_button" enctype="multipart/form-data" action="{% url 'index' %}add_book"
+                        method="POST" class="form">
+                        {% csrf_token %}
+                        <!-- <div class="form-group">
                         {{ form}}
                     </div> -->
 
-                    <div class="form-group">
-                        <img  id="book_image_src" alt="bookSelect" width="110" height="150">
-                        <input id="id_book_cover" type="file" name="book_cover" required> 
-                        <label for="exampleFormControlInput1">Book Name</label>
-                        <input type="text" class="form-control" name="Book-Title" id="bookTitle"
-                            placeholder="" required>
+                        <div class="form-group">
+                            <img id="book_image_src" alt="bookSelect" width="110" height="150">
+                            <input id="id_book_cover" type="file" name="book_cover" required>
+                            <label for="exampleFormControlInput1">Book Name</label>
+                            <input type="text" class="form-control" name="Book-Title" id="bookTitle" placeholder=""
+                                required>
                             <label for="exampleFormControlInput1">Author</label>
                             <input type="text" class="form-control" name="Book-Author" id="bookAuthor" placeholder=""
                                 required>
                             <label for="exampleFormControlInput1">ISBN</label>
-                        <input type="text" class="form-control" name="ISBN" id="ISBN"
-                            placeholder="" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="exampleFormControlSelect1">Genre</label>
-                        <select class="form-control" name="genre" id="genre">
-                            <option>Children</option>
-                            <option>Comics, Graphics</option>
-                            <option>Fantasy, Paranormal</option>
-                            <option>Fiction</option>
-                            <option>History, Historical Fiction, Biography</option>
-                            <option>Mystery, Thriller, Crime</option>
-                            <option>Non-Fiction</option>
-                            <option>Poetry</option>
-                            <option>Romance</option>
-                            <option>Young-Adult</option>
-                        </select>
-                    </div>
-                   
-                    <div class="form-group">
-                        <label for="exampleFormControlTextarea1">Description</label>
-                        <textarea class="form-control" name="description" id="description" rows="3" required></textarea>
-                    </div>
-                    <input type="hidden" id="url_id" name="url_name" value=""> 
-                    <button type="submit"  class="btn btn-primary" name="submitData">Save changes</button>
-                </form>
-                
-        </div>
-        </div>
-        {% endif %}
+                            <input type="text" class="form-control" name="ISBN" id="ISBN" placeholder="" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleFormControlSelect1">Genre</label>
+                            <select class="form-control" name="genre" id="genre">
+                                <option>Children</option>
+                                <option>Comics, Graphics</option>
+                                <option>Fantasy, Paranormal</option>
+                                <option>Fiction</option>
+                                <option>History, Historical Fiction, Biography</option>
+                                <option>Mystery, Thriller, Crime</option>
+                                <option>Non-Fiction</option>
+                                <option>Poetry</option>
+                                <option>Romance</option>
+                                <option>Young-Adult</option>
+                            </select>
+                        </div>
 
-        {% endblock %}
+                        <div class="form-group">
+                            <label for="exampleFormControlTextarea1">Description</label>
+                            <textarea class="form-control" name="description" id="description" rows="3"
+                                required></textarea>
+                        </div>
+                        <input type="hidden" id="url_id" name="url_name" value="">
+                        <button type="submit" class="btn btn-primary" name="submitData">Save changes</button>
+                    </form>
+
+                </div>
+            </div>
+            {% endif %}
+
+            {% endblock %}
 
 
-        {% block extrajs %}
+            {% block extrajs %}
 
-        <script src="main.js"></script>
-        <script src="getData.js"></script>
+            <script src="main.js"></script>
+            <script src="getData.js"></script>
 
-        {% endblock %}
+            {% endblock %}

@@ -366,7 +366,7 @@ with open('label_encoder.pickle','rb') as handle:
     le=pickle.load(handle)
 
 
-def getSimilarBooks(userId, book_id):
+def getSimilarBooks(book_id):
     
     print(book_id)
     books=mydb['bookDataset'].find({"ISBN":book_id})
