@@ -163,6 +163,62 @@
         {% endif %}
 
 
+        {% if user.is_authenticated %}
+        {% if last_check_in_book != "" and last_check_in_genre != "" and last_check_in_recent == "" %}
+        <div class="container">
+            <h4 style="padding:1.5em;">As you've last checked in book from {{ last_check_in_author }} </h4>
+            <h6> Last Checked in book genre: {{ last_check_in_genre }}</h6>
+            <div id="author_genre" class="carousel slide" data-ride="carousel">
+                <div class="carousel-inner row w-100 mx-auto" role="listbox">
+                    {% for s_books in similar_author_genre  %}
+
+                    {% if forloop.first %}
+                    <div class="carousel-item col-12 col-sm-6 col-md-4 col-lg-3 active">
+                        <div class="card" style="width: 15rem;">
+                            <img class="card-img-top" src="{{s_books.imageURL}}" alt="Card image cap"
+                                style="width:200; height:300;">
+                            <div class="card-body">
+                                <h5 class="card-title">{{s_books.bookTitle}}</h5>
+                                <p class="card-text">By {{s_books.bookAuthor}} </p>
+                                <a href="{% url 'detail' s_books.ISBN %}"> More </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="carousel-item col-12 col-sm-6 col-md-4 col-lg-3">
+                        <div class="card" style="width: 15rem;">
+                            <img class="card-img-top" src="{{s_books.imageURL}}" alt="Card image cap"
+                                style="width:200; height:300;">
+                            <div class="card-body">
+                                <h5 class="card-title">{{s_books.bookTitle}}</h5>
+                                <p class="card-text">By {{s_books.bookAuthor}}</p>
+                                <p> {{s_books.ISBN}}</p>
+                                <a href="{% url 'detail' s_books.ISBN %}"> More </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+
+                    {% endfor %}
+
+                </div>
+                <a class="carousel-control-prev" href="#author_genre" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#author_genre" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </div>
+        </div>
+        <br />
+        <hr />
+        {% endif %}
+        {% endif %}
+
+
         <div class="container">
             <h4 style="padding:1.5em;">Recently Added</h4>
             <div id="recentlyAdded" class="carousel slide" data-ride="carousel">
@@ -259,9 +315,10 @@
                         {{ form}}
                     </div> -->
 
-                        <div class="form-group">
+                        <div class="form-group" style="margin-top: 2em;">
                             <img id="book_image_src" alt="bookSelect" width="110" height="150">
                             <input id="id_book_cover" type="file" name="book_cover" required>
+                            <br>
                             <label for="exampleFormControlInput1">Book Name</label>
                             <input type="text" class="form-control" name="Book-Title" id="bookTitle" placeholder=""
                                 required>

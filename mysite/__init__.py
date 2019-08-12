@@ -118,7 +118,7 @@ def similar_recommendation(model, interaction_matrix, user_id, user_dikt,
             print("last",last_check_in)
             for i in range(len(last_check_in)):
                 last_check_in_book_id = last_check_in[i]['activity']['book_id']
-                similar_books = getSimilarBooks(user_id, last_check_in_book_id)
+                similar_books = getSimilarBooks(last_check_in_book_id)
                 s_books=s_books+similar_books
 
             s_books=list(set(s_books))
@@ -413,3 +413,25 @@ def fetchActivity(userId, ISBN):
         send_data=user_activity[0]
 
     return send_data
+
+
+# for similar books based on genre
+with open('bookList.pickle','rb') as handle:
+    bookList=pickle.load(handle)
+with open('genre_le.pickle','rb') as handle:
+    genre_le=pickle.load(handle)
+with open('nearest_book_genre.pickle','rb') as handle:
+    nearest_ind=pickle.load(handle)
+
+
+def getSimilarGenre(book_isbn):
+
+    try:    
+        book_code=genre_le.transform([book_isbn])
+        similar_genre_books = list(genre_le.inverse_transform(list(list(nearest_ind[book_code])[0])))
+        # print(similar_genre_books)
+    except:
+        similar_genre_books = []
+
+    return similar_genre_books
+    

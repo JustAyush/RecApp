@@ -12,15 +12,14 @@ from pymongo import MongoClient
 import pymongo
 import time
 import datetime
-
-
+from django.contrib import messages
 
 
 import ast
 
 from mysite import get_recommendation, get_clicks_rating, get_review_rating, get_net_rating, myclient, mydb, mycol
 
-from mysite import getSimilarBooks, fetchActivity
+from mysite import getSimilarBooks, fetchActivity, getSimilarGenre
 
 from users.models import Profile
 
@@ -41,6 +40,8 @@ top_rated_books = []
 book_search_data = []
 recently_added = []
 similar_books = []
+similar_genre = []
+similar_author_genre = []
 
 # Create your views here.
 def index(request):
@@ -51,7 +52,8 @@ def index(request):
     global top_rated_books
     global recently_added
     global similar_books
-
+    global similar_genre
+    global similar_author_genre
     # global bookTitle
     # global bookAuthor
     # global genre
@@ -68,6 +70,9 @@ def index(request):
     ISBN = ''
     imageURL= ''
     last_check_in_book = ''
+    last_check_in_genre = ''
+    last_check_in_recent = ''
+    last_check_in_author = ''
 
     # db=client.test_db
     # dict={'A':[1,2,3,4,5,6]}
@@ -106,13 +111,43 @@ def index(request):
             for_last_checked_books=mycol.find({"ISBN":last_check_in_book_id})
             for_last_checked_books=list(for_last_checked_books)
             last_check_in_book = for_last_checked_books[0]['Book-Title']
+            last_check_in_genre = for_last_checked_books[0]['genres']
+            last_check_in_author = for_last_checked_books[0]['Book-Author']
+        
             # print('Last Checked In----------------------------', last_check_in_book)
             similar_books = getSimilarBooks(last_check_in_book_id)
             x=mydb['bookDataset'].aggregate([{"$match":{"ISBN":{"$in":similar_books}}},{"$project":{'_id':0, 'ISBN':'$ISBN', 'genres': '$genres', 'bookTitle': '$Book-Title', 'bookAuthor': '$Book-Author', 'publicationYear': '$Year-Of-Publication', 'publisher': '$Publisher', 'imageURL': '$Image-URL', 'averageRating': '$average_rating', 'description': '$description', 'publicationYear':'$publication_year'} }])
             similar_books=list(x)
+
+            # for books with similar genre
+            similar_genre = getSimilarGenre(last_check_in_book_id)
+            # for book from same Author
+            y=mydb['bookDataset'].find({"Book-Author":{"$regex":last_check_in_author}})
+            book_authors=list(y)
+            author_isbn_list=[]
+            for i in range (len(book_authors)):
+                author_isbn_list.append(book_authors[i]['ISBN'])
+            author_isbn_list.remove(last_check_in_book_id)  
+            print('-----------books from same author------------')
+            print(author_isbn_list)
+            # combining author and genre
+            similar_author_genre = similar_genre + author_isbn_list
+            similar_author_genre = list(set(similar_author_genre))
+            x=mydb['bookDataset'].aggregate([{"$match":{"ISBN":{"$in":similar_author_genre}}},{"$project":{'_id':0, 'ISBN':'$ISBN', 'genres': '$genres', 'bookTitle': '$Book-Title', 'bookAuthor': '$Book-Author', 'publicationYear': '$Year-Of-Publication', 'publisher': '$Publisher', 'imageURL': '$Image-URL', 'averageRating': '$average_rating', 'description': '$description', 'publicationYear':'$publication_year'} }])
+            similar_author_genre = list(x)
+            if (similar_author_genre == []):
+                last_check_in_recent = 'recent'
+            else:
+                last_check_in_recent = ''
+
+           
         else:
             last_check_in_book = ""
+            last_check_in_genre = ""
+            last_check_in_recent = ''
+            last_check_in_author = ''
             similar_books = []
+            similar_genre = []
 
 
 
@@ -243,7 +278,12 @@ def index(request):
             'heading': heading,
             'top_rated': top_rated_books, 
             'last_check_in_book': last_check_in_book,
+            'last_check_in_genre': last_check_in_genre,
+            'last_check_in_author': last_check_in_author,
+            'similar_author_genre': similar_author_genre,
+            'last_check_in_recent': last_check_in_recent,
             'similar_books': similar_books,
+            'similar_genre': similar_genre,
             'recently_added': recently_added,
             'shopkeeper': shopkeeper, 
             'getData' : {
@@ -334,7 +374,20 @@ def detail(request, isbn):
                     sendActivity = fetchActivity(userId, isbn)
                     sendRating = sendActivity['rating']
                     sendReview = sendActivity['review']
-                whichList = 4
+                whichList = 5
+            else:
+                whichList = 0
+    
+    if whichList != 5:
+        for book in similar_author_genre:
+            if book['ISBN'] == isbn:
+                bookDetail = book
+                if request.user.is_authenticated:
+                    userId = request.user.id + 278858
+                    sendActivity = fetchActivity(userId, isbn)
+                    sendRating = sendActivity['rating']
+                    sendReview = sendActivity['review']
+                whichList = 6
             else:
                 whichList = 0
     
@@ -531,7 +584,7 @@ def detail(request, isbn):
 
     hey = "yo"
     
-    return render(request, 'example/detail.html', {'b': bookDetail, 'e': rec_books, 'hey': hey, 'shopkeeper': shopkeeper, 'sendRating': sendRating, 'sendReview': sendReview})
+    return render(request, 'example/detail.html', {'b': bookDetail, 'e': rec_books, 'similar_books': similar_books, 'hey': hey, 'shopkeeper': shopkeeper, 'sendRating': sendRating, 'sendReview': sendReview})
 
 
 
@@ -674,7 +727,8 @@ def add_book(request):
     #             'imageURL': imageURL 
     #         }
     # }) 
-    return HttpResponse('you have no authority to access this site')
+    messages.success(request, 'Book has been successfully added.') 
+    return redirect('index')
 
 def search(request):
 
